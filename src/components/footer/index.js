@@ -12,7 +12,7 @@ import { Link } from "react-router-dom";
 import { Usecustem } from "../../context/chat";
 
 const Footer = () => {
-  const { isDarkMode, setIsDarkMode } = Usecustem();
+  const { isDarkMode } = Usecustem();
 
   return (
     <>
