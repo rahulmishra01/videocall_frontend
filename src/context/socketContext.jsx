@@ -21,6 +21,8 @@ export const SocketProvider = ({ children }) => {
   const navigate = useNavigate();
   const [isWaiting, setIsWaiting] = useState();
 
+  const [remotePeerId, setRemotePeerId] = useState("");
+
   const socket = useMemo(
     () =>
       io(process.env.REACT_APP_SOCKET_API_BASE_URL, { withCredentials: true }),
@@ -51,10 +53,16 @@ export const SocketProvider = ({ children }) => {
       setRoomId(roomKey);
       socket.emit("join-room", roomKey);
     })
+
+    socket.on("ring", ({from}) => {
+      setRemotePeerId(from);
+    })
+
     return () => {
       socket.off("joined-room");
       socket.off("user-disconnected");
       socket.off("chat-closed");
+      socket.off("ring");
     };
   }, [socket]); 
 
@@ -78,7 +86,9 @@ export const SocketProvider = ({ children }) => {
     isWaiting,
     setIsWaiting,
     joinRandomRoom,
-    handleExitChat
+    handleExitChat,
+    remotePeerId,
+    setRemotePeerId
   };
   return (
     <socketContext.Provider value={value}>{children}</socketContext.Provider>

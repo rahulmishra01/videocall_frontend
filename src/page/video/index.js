@@ -2,45 +2,38 @@ import React, { useRef, useState, useEffect } from "react";
 import Peer from "peerjs";
 import { useSocket } from "../../context/socketContext";
 import styles from "./style.module.css";
+import { v4 as uuidv4 } from "uuid";
+import { useSocket } from "../../context/socketContext";
 
 const TempVideoPage = () => {
-  const { socket } = useSocket();
+
   const [peerId, setPeerId] = useState("");
-  const [remotePeerId, setRemotePeerId] = useState("");
+ 
+  const [incomingCall, setIncomingCall] = useState(null);
   const localVideoRef = useRef();
   const remoteVideoRef = useRef();
-  const peerInstance = useRef(null);
+  const peerRef = useRef(null);
+
+  const {remotePeerId, setRemotePeerId, socket} = useSocket();
 
   useEffect(() => {
-    const peer = new Peer(undefined, {
-      host: process.env.REACT_APP_PEER_HOST,
-      port: process.env.REACT_APP_PEER_PORT,
-      secure: process.env.REACT_APP_PEER_SECURE === "true",
-      debug: 3,
-    });
+    const userId = uuidv4();
+    const peer = new Peer(userId);
+    peerRef.current = peer;
 
     peer.on("open", (id) => {
       setPeerId(id);
-      console.log("akash", id);
     });
 
-    peer.on("error", (err) => {
-      console.log("PeerJS error:", err);
+    peer.on("call", (incomingCall) => {
+      setCall(incomingCall);
+      setIncomingCall(incomingCall);
     });
 
-    peer.on("call", (call) => {
-      navigator.mediaDevices
-        .getUserMedia({ video: true, audio: true })
-        .then((stream) => {
-          localVideoRef.current.srcObject = stream;
-          call.answer(stream); // Answer the call with an A/V stream.
-          call.on("stream", (remoteStream) => {
-            remoteVideoRef.current.srcObject = remoteStream;
-          });
-        });
-    });
-
-    peerInstance.current = peer;
+    return () => {
+      peer.disconnect();
+      socket.disconnect(); 
+    }
   }, []);
 
   const startCall = () => {
@@ -48,16 +41,37 @@ const TempVideoPage = () => {
       .getUserMedia({ video: true, audio: true })
       .then((stream) => {
         localVideoRef.current.srcObject = stream;
-        const call = peerInstance.current.call(remotePeerId, stream);
-        call.on("stream", (remoteStream) => {
+        const outgoingCall = peerRef.current.call(remotePeerId, stream);
+        outgoingCall.on("stream", (remoteStream) => {
           remoteVideoRef.current.srcObject = remoteStream;
         });
+        setCall(outgoingCall);
       });
   };
 
-  const copytext = (x) => {
-    navigator.clipboard.writeText(x);
+  const answerCall = () => {
+    navigator.mediaDevices
+      .getUserMedia({ video: true, audio: true })
+      .then((stream) => {
+        localVideoRef.current.srcObject = stream;
+        incomingCall.answer(stream);
+        incomingCall.on("stream", (remoteStream) => {
+          remoteVideoRef.current.srcObject = remoteStream;
+        });
+        setCall(incomingCall);
+        setIncomingCall(null);
+      });
   };
+
+  const endCall = () => {
+    if (call) {
+      call.close();
+      setCall(null);
+      remoteVideoRef.current.srcObject = null;
+      localVideoRef.current.srcObject.getTracks().forEach((track) => track.stop());
+    }
+  };
+
 
   return (
     <div>
@@ -85,7 +99,25 @@ const TempVideoPage = () => {
           value={remotePeerId}
           onChange={(e) => setRemotePeerId(e.target.value)}
         />
-        <button onClick={startCall}>Start Call</button>
+        <button onClick={startCall}>Start Call</button> 
+      </div>
+      <div>
+        {incomingCall && (
+            <button
+              onClick={answerCall}
+              className="bg-green-500 text-white p-2 rounded"
+            >
+              Answer Call
+            </button>
+        )}
+        {call && (
+          <button
+            onClick={endCall}
+            className="bg-red-500 text-white p-2 rounded"
+          >
+            End Call
+          </button>
+        )}
       </div>
     </div>
   );
