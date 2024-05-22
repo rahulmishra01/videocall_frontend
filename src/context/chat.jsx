@@ -5,7 +5,7 @@ const custem = createContext();
 export const Usecustem = () => {
   return useContext(custem);
 };
-
+ 
 export default function Contextfn({ children }) {
   const [inputvalue, setInputvalue] = useState();
   const [isDarkMode, setIsDarkMode] = useState(false);
