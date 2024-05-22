@@ -1,6 +1,5 @@
 import React, { useRef, useState, useEffect } from "react";
 import Peer from "peerjs";
-import { useSocket } from "../../context/socketContext";
 import styles from "./style.module.css";
 import { v4 as uuidv4 } from "uuid";
 import { useSocket } from "../../context/socketContext";
@@ -13,6 +12,7 @@ const TempVideoPage = () => {
   const localVideoRef = useRef();
   const remoteVideoRef = useRef();
   const peerRef = useRef(null);
+  const [call,setCall] = useState();
 
   const {remotePeerId, setRemotePeerId, socket} = useSocket();
 
@@ -34,7 +34,7 @@ const TempVideoPage = () => {
       peer.disconnect();
       socket.disconnect(); 
     }
-  }, []);
+  }, [socket]);
 
   const startCall = () => {
     navigator.mediaDevices
