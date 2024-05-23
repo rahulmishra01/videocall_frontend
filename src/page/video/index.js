@@ -20,6 +20,7 @@ const TempVideoPage = () => {
     peerRef.current = peer;
 
     peer.on("call", (call) => {
+      console.log("call connected");
       navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then((stream) => {
           localVideoRef.current.srcObject = stream;
           call.answer(stream); // Answer the call with an A/V stream.
@@ -52,6 +53,7 @@ const TempVideoPage = () => {
   }
 
   const startCall = () => {
+    console.log("call started");
     navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then((stream) => {
         localVideoRef.current.srcObject = stream;
         const call = peerRef.current.call(remotePeerId, stream);
