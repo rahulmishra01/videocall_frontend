@@ -14,7 +14,7 @@ const TempVideoPage = () => {
   const peerRef = useRef(null);
   const [call,setCall] = useState();
 
-  const {remotePeerId, setRemotePeerId, socket} = useSocket();
+  const {remotePeerId, setRemotePeerId} = useSocket();
 
   useEffect(() => {
     const userId = uuidv4();
@@ -32,9 +32,16 @@ const TempVideoPage = () => {
 
     return () => {
       peer.disconnect();
-      socket.disconnect(); 
     }
   }, []);
+
+  const initiateCall = (stream) => {
+    const outgoingCall = peerRef.current.call(remotePeerId,stream);
+    outgoingCall.on("stream", (remoteStream) => {
+      remoteVideoRef.current.srcObject = remoteStream;
+    });
+    setCall(outgoingCall);
+  }
 
   const startCall = () => {
     navigator.mediaDevices
@@ -43,24 +50,39 @@ const TempVideoPage = () => {
         localVideoRef.current.srcObject = stream;
         const outgoingCall = peerRef.current.call(remotePeerId, stream);
         outgoingCall.on("stream", (remoteStream) => {
-          remoteVideoRef.current.srcObject = remoteStream;
+          const emptyStream  = new MediaStream();
+          remoteVideoRef.current.srcObject = emptyStream;
         });
         setCall(outgoingCall);
+      }).catch((error) => {
+        if(error.name === "NotFoundError" || error.name === "DevicesNotFoundError"){
+          const emptyStream  = new MediaStream();
+          initiateCall(emptyStream)
+        }
       });
   };
 
+  const answerIncomingCall = (stream) => {
+    incomingCall.answer(stream);
+    incomingCall.on("stream", (remoteStream) => {
+      remoteVideoRef.current.srcObject = remoteStream;
+    });
+    setCall(incomingCall);
+    setIncomingCall(null);    
+  }
+ 
   const answerCall = () => {
     navigator.mediaDevices
       .getUserMedia({ video: true, audio: true })
       .then((stream) => {
         localVideoRef.current.srcObject = stream;
-        incomingCall.answer(stream);
-        incomingCall.on("stream", (remoteStream) => {
-          remoteVideoRef.current.srcObject = remoteStream;
-        });
-        setCall(incomingCall);
-        setIncomingCall(null);
-      });
+        answerIncomingCall(stream);
+      }).catch((error) => {
+        if(error.name === "NotFoundError" || error.name === "DevicesNotFoundError"){
+          const emptyStream  = new MediaStream();
+          answerIncomingCall(emptyStream)
+        }
+    });
   };
 
   const endCall = () => {
@@ -68,7 +90,7 @@ const TempVideoPage = () => {
       call.close();
       setCall(null);
       remoteVideoRef.current.srcObject = null;
-      localVideoRef.current.srcObject.getTracks().forEach((track) => track.stop());
+      localVideoRef.current.srcObject = null;
     }
   };
 
