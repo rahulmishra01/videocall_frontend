@@ -13,50 +13,79 @@ const TempVideoPage = () => {
 
   useEffect(() => {  
     const userId = uuidv4();
+    console.log("userId", userId);
     const peer = new Peer(userId);
+    console.log("peer", peer);
     setPeerId(userId);
     peerRef.current = peer;
 
     peer.on("call", (call) => {
-      navigator.mediaDevices.getUserMedia(
-        { video: true, audio: true },
-        (stream) => {
+      navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then((stream) => {
           localVideoRef.current.srcObject = stream;
           call.answer(stream); // Answer the call with an A/V stream.
           call.on("stream", (remoteStream) => {
-            // Show stream in some <video> element.
+            console.log(remoteStream);
             remoteVideoRef.current.srcObject = remoteStream;
           });
-        },
-        (err) => {
-          console.error("Failed to get local stream", err);
-        },
-      );
+        }).catch((err) => {
+          if(err.name === "NotFoundError"){
+            const emptyStream = new MediaStream();
+            localVideoRef.current.srcObject = emptyStream;
+            call.answer(emptyStream);
+            call.on("stream", (remoteStream) => {
+              console.log(remoteStream);
+              remoteVideoRef.current.srcObject = remoteStream;
+            });
+          }
+        })
     });
 
-
+    return () => {
+      peer.disconnect();
+    }
   }, []);
 
+  const setPeer = () => {
+    const peer = new Peer(peerId);
+    peerRef.current = peer;
+    console.log("peer changed", peer);
+  }
+
   const startCall = () => {
-    navigator.mediaDevices.getUserMedia(
-      { video: true, audio: true },
-      (stream) => {
+    navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then((stream) => {
         localVideoRef.current.srcObject = stream;
         const call = peerRef.current.call(remotePeerId, stream);
         call.on("stream", (remoteStream) => {
+          console.log(remoteStream);
           remoteVideoRef.current.srcObject = remoteStream;
         });
-      },
-      (err) => {
-        console.error("Failed to get local stream", err);
-      },
-    );
+      }).catch((err) => {
+        if(err.name === "NotFoundError"){
+          const emptyStream = new MediaStream();
+          localVideoRef.current.srcObject = emptyStream;
+          const call = peerRef.current.call(remotePeerId, emptyStream);
+          call.on("stream", (remoteStream) => {
+            console.log(remoteStream);
+            remoteVideoRef.current.srcObject = remoteStream;
+          });
+        }
+      })
   }
 
 
   return (
     <div>
       <h1>Video Chat</h1>
+      <div>
+        <input
+          type="text"
+          placeholder="This device Peer ID"
+          value={peerId}
+          onChange={(e) => setPeerId(e.target.value)}
+        />
+        <button onClick={setPeer}>Change peerId</button> 
+      </div>
+
       <video
         ref={localVideoRef}
         className={styles.video}
