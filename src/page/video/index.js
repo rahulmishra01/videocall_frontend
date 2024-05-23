@@ -34,7 +34,7 @@ const TempVideoPage = () => {
       peer.disconnect();
       socket.disconnect(); 
     }
-  }, [socket]);
+  }, []);
 
   const startCall = () => {
     navigator.mediaDevices
