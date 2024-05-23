@@ -2,97 +2,56 @@ import React, { useRef, useState, useEffect } from "react";
 import Peer from "peerjs";
 import styles from "./style.module.css";
 import { v4 as uuidv4 } from "uuid";
-import { useSocket } from "../../context/socketContext";
 
 const TempVideoPage = () => {
 
   const [peerId, setPeerId] = useState("");
- 
-  const [incomingCall, setIncomingCall] = useState(null);
   const localVideoRef = useRef();
   const remoteVideoRef = useRef();
-  const peerRef = useRef(null);
-  const [call,setCall] = useState();
+  const peerRef = useRef();
+  const [remotePeerId, setRemotePeerId] = useState("");
 
-  const {remotePeerId, setRemotePeerId} = useSocket();
-
-  useEffect(() => {
+  useEffect(() => {  
     const userId = uuidv4();
     const peer = new Peer(userId);
+    setPeerId(userId);
     peerRef.current = peer;
 
-    peer.on("open", (id) => {
-      setPeerId(id);
+    peer.on("call", (call) => {
+      navigator.mediaDevices.getUserMedia(
+        { video: true, audio: true },
+        (stream) => {
+          localVideoRef.current.srcObject = stream;
+          call.answer(stream); // Answer the call with an A/V stream.
+          call.on("stream", (remoteStream) => {
+            // Show stream in some <video> element.
+            remoteVideoRef.current.srcObject = remoteStream;
+          });
+        },
+        (err) => {
+          console.error("Failed to get local stream", err);
+        },
+      );
     });
 
-    peer.on("call", (incomingCall) => {
-      setCall(incomingCall);
-      setIncomingCall(incomingCall);
-    });
 
-    return () => {
-      peer.disconnect();
-    }
   }, []);
 
-  const initiateCall = (stream) => {
-    const outgoingCall = peerRef.current.call(remotePeerId,stream);
-    outgoingCall.on("stream", (remoteStream) => {
-      remoteVideoRef.current.srcObject = remoteStream;
-    });
-    setCall(outgoingCall);
-  }
-
   const startCall = () => {
-    navigator.mediaDevices
-      .getUserMedia({ video: true, audio: true })
-      .then((stream) => {
+    navigator.mediaDevices.getUserMedia(
+      { video: true, audio: true },
+      (stream) => {
         localVideoRef.current.srcObject = stream;
-        const outgoingCall = peerRef.current.call(remotePeerId, stream);
-        outgoingCall.on("stream", (remoteStream) => {
-          const emptyStream  = new MediaStream();
-          remoteVideoRef.current.srcObject = emptyStream;
+        const call = peerRef.current.call(remotePeerId, stream);
+        call.on("stream", (remoteStream) => {
+          remoteVideoRef.current.srcObject = remoteStream;
         });
-        setCall(outgoingCall);
-      }).catch((error) => {
-        if(error.name === "NotFoundError" || error.name === "DevicesNotFoundError"){
-          const emptyStream  = new MediaStream();
-          initiateCall(emptyStream)
-        }
-      });
-  };
-
-  const answerIncomingCall = (stream) => {
-    incomingCall.answer(stream);
-    incomingCall.on("stream", (remoteStream) => {
-      remoteVideoRef.current.srcObject = remoteStream;
-    });
-    setCall(incomingCall);
-    setIncomingCall(null);    
+      },
+      (err) => {
+        console.error("Failed to get local stream", err);
+      },
+    );
   }
- 
-  const answerCall = () => {
-    navigator.mediaDevices
-      .getUserMedia({ video: true, audio: true })
-      .then((stream) => {
-        localVideoRef.current.srcObject = stream;
-        answerIncomingCall(stream);
-      }).catch((error) => {
-        if(error.name === "NotFoundError" || error.name === "DevicesNotFoundError"){
-          const emptyStream  = new MediaStream();
-          answerIncomingCall(emptyStream)
-        }
-    });
-  };
-
-  const endCall = () => {
-    if (call) {
-      call.close();
-      setCall(null);
-      remoteVideoRef.current.srcObject = null;
-      localVideoRef.current.srcObject = null;
-    }
-  };
 
 
   return (
@@ -123,7 +82,7 @@ const TempVideoPage = () => {
         />
         <button onClick={startCall}>Start Call</button> 
       </div>
-      <div>
+      {/* <div>
         {incomingCall && (
             <button
               onClick={answerCall}
@@ -140,7 +99,7 @@ const TempVideoPage = () => {
             End Call
           </button>
         )}
-      </div>
+      </div> */}
     </div>
   );
 };
