@@ -4,11 +4,11 @@ import styles from "./style.module.css";
 import { v4 as uuidv4 } from "uuid";
 
 const TempVideoPage = () => {
-
   const [peerId, setPeerId] = useState("");
+  const [remotePeerId, setRemotePeerId] = useState("");
   const localVideoRef = useRef();
   const remoteVideoRef = useRef();
-  const peerInstance = useRef(null);
+  const peerRef = useRef(null);
 
   useEffect(() => {
     const peer = new Peer(undefined, {
@@ -23,71 +23,37 @@ const TempVideoPage = () => {
       setPeerId(id);
       console.log("akash", id);
     });
-  },[])
-
-  useEffect(() => {  
-    const userId = uuidv4();
-    console.log("userId", userId);
-    const peer = new Peer(userId);
-    console.log("peer", peer);
-    setPeerId(userId);
-    peerRef.current = peer;
 
     peer.on("call", (call) => {
-      console.log("call connected");
       navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then((stream) => {
-          localVideoRef.current.srcObject = stream;
-          call.answer(stream);
-          call.on("stream", (remoteStream) => {
-            console.log(remoteStream);
-            remoteVideoRef.current.srcObject = remoteStream;
-          });
-        }).catch((err) => {
-          if(err.name === "NotFoundError"){
-            const emptyStream = new MediaStream();
-            localVideoRef.current.srcObject = emptyStream;
-            call.answer(emptyStream);
-            call.on("stream", (remoteStream) => {
-              console.log(remoteStream);
-              remoteVideoRef.current.srcObject = remoteStream;
-            });
-          }
-        })
+        localVideoRef.current.srcObject = stream;
+        call.answer(stream); // Answer the call with an A/V stream.
+        call.on("stream", (remoteStream) => {
+          remoteVideoRef.current.srcObject = remoteStream;
+        });
+      });
     });
+
+    peerRef.current = peer;
 
     return () => {
       peer.disconnect();
     }
   }, []);
 
-  const setPeer = () => {
-    const peer = new Peer(peerId);
-    peerRef.current = peer;
-    console.log("peer changed", peer);
-  }
-
   const startCall = () => {
-    console.log("call started");
     navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then((stream) => {
-        localVideoRef.current.srcObject = stream;
-        const call = peerRef.current.call(remotePeerId, stream);
-        call.on("stream", (remoteStream) => {
-          console.log(remoteStream);
-          remoteVideoRef.current.srcObject = remoteStream;
-        });
-      }).catch((err) => {
-        if(err.name === "NotFoundError"){
-          const emptyStream = new MediaStream();
-          localVideoRef.current.srcObject = emptyStream;
-          const call = peerRef.current.call(remotePeerId, emptyStream);
-          call.on("stream", (remoteStream) => {
-            console.log(remoteStream);
-            remoteVideoRef.current.srcObject = remoteStream;
-          });
-        }
-      })
-  }
+      localVideoRef.current.srcObject = stream;
+      const call = peerRef.current.call(remotePeerId, stream);
+      call.on("stream", (remoteStream) => {
+        remoteVideoRef.current.srcObject = remoteStream;
+      });
+    });
+  };
 
+  const copytext = (x) => {
+    navigator.clipboard.writeText(x);
+  };
 
   return (
     <div>
@@ -99,9 +65,8 @@ const TempVideoPage = () => {
           value={peerId}
           onChange={(e) => setPeerId(e.target.value)}
         />
-        <button onClick={setPeer}>Change peerId</button> 
+        <button onClick={() => copytext(peerId)}>Copy</button>
       </div>
-
       <video
         ref={localVideoRef}
         className={styles.video}
@@ -114,10 +79,7 @@ const TempVideoPage = () => {
         autoPlay
         playsInline
       ></video>
-      <p>this devices peerId : {peerId} </p>{" "}
-      <button onClick={() => navigator.clipboard.writeText(peerId)}>
-        Copy
-      </button>
+      <p>this device's peerId : {peerId} </p>
       <div>
         <input
           type="text"
@@ -125,26 +87,8 @@ const TempVideoPage = () => {
           value={remotePeerId}
           onChange={(e) => setRemotePeerId(e.target.value)}
         />
-        <button onClick={startCall}>Start Call</button> 
+        <button onClick={startCall}>Start Call</button>
       </div>
-      {/* <div>
-        {incomingCall && (
-            <button
-              onClick={answerCall}
-              className="bg-green-500 text-white p-2 rounded"
-            >
-              Answer Call
-            </button>
-        )}
-        {call && (
-          <button
-            onClick={endCall}
-            className="bg-red-500 text-white p-2 rounded"
-          >
-            End Call
-          </button>
-        )}
-      </div> */}
     </div>
   );
 };
