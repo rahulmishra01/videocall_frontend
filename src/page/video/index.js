@@ -37,7 +37,7 @@ const TempVideoPage = () => {
       console.log("call connected");
       navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then((stream) => {
           localVideoRef.current.srcObject = stream;
-          call.answer(stream); // Answer the call with an A/V stream.
+          call.answer(stream);
           call.on("stream", (remoteStream) => {
             console.log(remoteStream);
             remoteVideoRef.current.srcObject = remoteStream;
