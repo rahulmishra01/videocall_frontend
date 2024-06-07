@@ -8,8 +8,22 @@ const TempVideoPage = () => {
   const [peerId, setPeerId] = useState("");
   const localVideoRef = useRef();
   const remoteVideoRef = useRef();
-  const peerRef = useRef();
-  const [remotePeerId, setRemotePeerId] = useState("");
+  const peerInstance = useRef(null);
+
+  useEffect(() => {
+    const peer = new Peer(undefined, {
+      host: process.env.REACT_APP_PEER_HOST,
+      port: process.env.REACT_APP_PEER_PORT,
+      path: '/peerjs',
+      secure: process.env.REACT_APP_PEER_SECURE === "true",
+      debug: 3,
+    });
+
+    peer.on("open", (id) => {
+      setPeerId(id);
+      console.log("akash", id);
+    });
+  },[])
 
   useEffect(() => {  
     const userId = uuidv4();
