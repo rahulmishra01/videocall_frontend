@@ -1,5 +1,5 @@
 import { Menu, MenuButton, Transition } from "@headlessui/react";
-import React, { Fragment, useEffect, useState } from "react";
+import React, { Fragment, useState } from "react";
 import { PiListBold } from "react-icons/pi";
 import { Link, useNavigate } from "react-router-dom";
 import ThemeSwitcher from "../ThemeSwitcher";

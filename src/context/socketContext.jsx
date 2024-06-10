@@ -58,7 +58,7 @@ export const SocketProvider = ({ children }) => {
       socket.off("user-disconnected");
       socket.off("chat-closed");
     };
-  }, [socket]); 
+  }, [socket, roomId, setUsemsg]); 
 
   const joinRandomRoom = () => {
     const roomKey = uuidv4();
