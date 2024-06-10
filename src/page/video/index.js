@@ -1,7 +1,6 @@
 import React, { useRef, useState, useEffect } from "react";
 import Peer from "peerjs";
 import styles from "./style.module.css";
-import { v4 as uuidv4 } from "uuid";
 
 const TempVideoPage = () => {
   const [peerId, setPeerId] = useState("");
@@ -21,13 +20,12 @@ const TempVideoPage = () => {
 
     peer.on("open", (id) => {
       setPeerId(id);
-      console.log("akash", id);
     });
 
     peer.on("call", (call) => {
       navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then((stream) => {
         localVideoRef.current.srcObject = stream;
-        call.answer(stream); // Answer the call with an A/V stream.
+        call.answer(stream);
         call.on("stream", (remoteStream) => {
           remoteVideoRef.current.srcObject = remoteStream;
         });

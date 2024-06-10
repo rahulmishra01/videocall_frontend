@@ -7,7 +7,7 @@ import { EmojiPickerData } from "./emoji";
 function ChatFooter() {
   const [showemojis, setShowemojis] = useState(false);
   const [message, setMessage] = useState("");
-  const { usemsg, setUsemsg, isDarkMode } = Usecustem();
+  const { setUsemsg, isDarkMode } = Usecustem();
   const { socket, roomId } = useSocket();
   const textarea = useRef();
 

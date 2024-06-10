@@ -24,7 +24,7 @@ function ChatBody() {
     return () => {
       socket.off("receive-message", handleMessage);
     };
-  }, [socket]);
+  }, [socket, setUsemsg]);
 
   return (
     <div className="mt-5 h-[calc(100vh-215px)] md:h-[calc(100vh-255px)] overflow-y-auto ">
@@ -57,7 +57,7 @@ function ChatBody() {
                     <div className="flex flex-col items-end gap-2">
                       {img?.length === 1 ? (
                         <div className="rounded-[30px_25px_0_30px] bg-[#e5edf5] p-[16px_20px] w-[max-content] flex gap-2">
-                          <img className="w-[300px] h-[300px] rounded-[20px] bg-gray-500" />
+                          <img className="w-[300px] h-[300px] rounded-[20px] bg-gray-500" alt="img" />
                         </div>
                       ) : (
                         <div>
@@ -73,6 +73,7 @@ function ChatBody() {
                                 <img
                                   src="https://themes.pixelstrap.com/chitchat/assets/images/avtar/girls.jpg"
                                   className="w-[85px] h-[85px] rounded-[20px] bg-gray-500"
+                                  alt="img"
                                 />
                               );
                             })}

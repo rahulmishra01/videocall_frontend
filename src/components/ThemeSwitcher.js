@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { CiDark } from "react-icons/ci";
 import { CiLight } from "react-icons/ci";
 import { Usecustem } from "../context/chat";
