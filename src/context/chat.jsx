@@ -1,9 +1,9 @@
 import { createContext, useContext, useEffect, useState } from "react";
 
-const custem = createContext();
+const custom = createContext();
 
 export const Usecustem = () => {
-  return useContext(custem);
+  return useContext(custom);
 };
  
 export default function Contextfn({ children }) {
@@ -14,8 +14,8 @@ export default function Contextfn({ children }) {
     localStorage.getItem("mode")
   },[isDarkMode])
   return (
-    <custem.Provider value={{ inputvalue, setInputvalue, usemsg, setUsemsg, isDarkMode, setIsDarkMode }}>
+    <custom.Provider value={{ inputvalue, setInputvalue, usemsg, setUsemsg, isDarkMode, setIsDarkMode }}>
       {children}
-    </custem.Provider>
+    </custom.Provider>
   );
 }
